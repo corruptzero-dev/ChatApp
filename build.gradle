@@ -1,0 +1,63 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.1'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+apply plugin: 'java'
+
+jar {
+    duplicatesStrategy "exclude"
+    manifest {
+        attributes(
+                'Main-Class': 'ru.corruptzero.chatapp.ChatAppApplication'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task stage(type: Copy, dependsOn: [clean, build]) {
+    doFirst {
+        from jar
+        into project.rootDir
+        rename {
+            'uber.jar'
+        }
+    }
+}
+
+stage.mustRunAfter(clean)
+
+clean {
+    doLast {
+        project.file('uber.jar').delete()
+    }
+}
+group = 'ru.corruptzero'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-reactor-netty:2.7.1'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
